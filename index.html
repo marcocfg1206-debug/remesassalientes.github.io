@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auditoría MVCG - Sistema Final</title>
+    <title>Auditoría MVCG - Acceso Restringido</title>
     
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -11,7 +11,7 @@
     
     <style>
         :root {
-            /* TEMA OSCURO (Interfaz) */
+            /* TEMA OSCURO */
             --window-bg: #1e1e1e;
             --content-bg: #262626;
             --titlebar-bg: #2d2d2d;
@@ -37,18 +37,71 @@
             overflow: hidden; 
         }
 
-        /* --- VENTANA PRINCIPAL --- */
-        .mac-window {
-            width: 600px;
-            height: 90vh;
-            max-height: 950px;
-            background-color: var(--window-bg);
-            border-radius: 12px;
-            box-shadow: 0 40px 80px rgba(0,0,0,0.8);
-            display: flex; flex-direction: column; overflow: hidden; border: 1px solid #333;
-            position: relative;
-            z-index: 1; 
+        /* --- PANTALLA DE LOGIN (NUEVO) --- */
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #000000; /* Fondo negro total */
+            background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?q=80&w=2676&auto=format&fit=crop'); 
+            background-size: cover;
+            background-position: center;
+            z-index: 99999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            backdrop-filter: blur(15px);
         }
+
+        .login-card {
+            background: rgba(30, 30, 30, 0.6);
+            backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+            width: 320px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .user-avatar {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: #333; margin: 0 auto 20px;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 40px; color: #fff; border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .login-title { color: white; font-size: 18px; margin-bottom: 20px; font-weight: 500; }
+
+        .pass-input {
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2);
+            padding: 10px 15px; border-radius: 20px; color: white; width: 100%;
+            font-size: 14px; margin-bottom: 15px; text-align: center; outline: none;
+            transition: all 0.3s;
+        }
+        .pass-input:focus { border-color: var(--accent-color); background: rgba(0,0,0,0.5); }
+        .pass-input.error { border-color: var(--error-color); animation: shake 0.3s; }
+
+        .unlock-btn {
+            background: rgba(255,255,255,0.1); color: white; border: none;
+            padding: 8px 20px; border-radius: 15px; cursor: pointer; font-size: 13px;
+            transition: 0.2s; font-weight: 500;
+        }
+        .unlock-btn:hover { background: rgba(255,255,255,0.2); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
+
+
+        /* --- VENTANA PRINCIPAL (Oculta por defecto) --- */
+        .mac-window {
+            width: 600px; height: 90vh; max-height: 950px;
+            background-color: var(--window-bg); border-radius: 12px;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.8);
+            display: none; /* OCULTO HASTA LOGIN */
+            flex-direction: column; overflow: hidden; border: 1px solid #333;
+            position: relative; z-index: 1; 
+            animation: slideUpWindow 0.5s ease-out;
+        }
+
+        @keyframes slideUpWindow { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
         .title-bar {
             height: 38px; background: var(--titlebar-bg); display: flex; align-items: center; justify-content: center;
@@ -63,7 +116,7 @@
 
         .window-content { padding: 25px; overflow-y: auto; flex-grow: 1; background-color: var(--content-bg); }
 
-        /* --- UI COMPONENTES --- */
+        /* UI ELEMENTS */
         .picker-section { display: flex; justify-content: space-between; background-color: var(--card-bg); border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border-color); }
         .picker-column { width: 48%; position: relative; text-align: center; }
         .picker-label { color: var(--accent-color); font-size: 11px; text-transform: uppercase; font-weight: 700; margin-bottom: 8px; }
@@ -110,52 +163,46 @@
         .denom-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; }
         .denom-label { width: 25%; color: var(--accent-color); font-weight: 700; font-size: 14px; }
         .denom-input-group { width: 45%; }
+        /* IMPORTANTE: Inputs de tipo texto para permitir comas */
         .denom-input { background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); padding: 8px; font-size: 14px; width: 100%; text-align: center; }
         .denom-result { width: 30%; text-align: right; color: var(--text-secondary); font-size: 12px; }
 
         .response-toast { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 20px; border-radius: 8px; display: none; z-index: 300; border: 1px solid #555; }
 
-        /* --- ÁREA DE IMPRESIÓN (OVERLAY VISIBLE) --- 
-           ESTRATEGIA: Cuando generamos el PDF, mostramos esto encima de todo (z-index 9999).
-           Así html2canvas NO puede fallar porque es lo único que hay en pantalla.
-        */
+        /* OVERLAY IMPRESIÓN */
         #printable-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background-color: #333; /* Fondo oscuro de carga */
-            z-index: 9999; /* Encima de todo */
-            display: none; /* Oculto por defecto */
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            overflow: auto;
-            padding: 20px;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: #333; z-index: 9999; display: none;
+            flex-direction: column; align-items: center; overflow: auto; padding: 20px;
         }
 
         #pdf-render-target {
-            background-color: white;
-            width: 816px; /* Carta */
-            min-height: 1056px;
-            padding: 40px;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5);
-            margin: 20px auto;
-            /* Texto negro forzado */
-            color: black !important;
-            font-family: Arial, sans-serif !important;
+            background-color: white; width: 816px; min-height: 1056px; padding: 20px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5); margin: 20px auto;
+            color: black !important; font-family: Arial, sans-serif !important;
         }
         
-        #loading-msg {
-            color: white; font-size: 20px; font-weight: bold; margin-bottom: 20px; margin-top: 20px;
-        }
+        #loading-msg { color: white; font-size: 20px; font-weight: bold; margin: 20px; }
 
     </style>
 </head>
 <body>
 
-    <div class="mac-window">
+    <div id="login-overlay">
+        <div class="login-card">
+            <div class="user-avatar">
+                <span class="material-icons-round" style="font-size: 40px;">lock</span>
+            </div>
+            <div class="login-title">Auditoría MVCG</div>
+            <input type="password" id="login-pass" class="pass-input" placeholder="Contraseña">
+            <button class="unlock-btn" onclick="checkPassword()">Desbloquear</button>
+        </div>
+    </div>
+
+    <div class="mac-window" id="main-app">
         <div class="title-bar">
             <div class="traffic-lights"><div class="light red"></div><div class="light yellow"></div><div class="light green"></div></div>
-            <div class="window-title">Auditoría MVCG</div>
+            <div class="window-title">Auditoría MVCG - Usuario Verificado</div>
         </div>
 
         <div class="window-content">
@@ -189,7 +236,7 @@
             <div class="form-grid">
                 <div class="input-box full-width">
                     <span class="field-label">Valor Contenido</span>
-                    <input type="text" id="declared-value" class="std-input big-input" placeholder="0.00" oninput="updateSummary()">
+                    <input type="text" id="declared-value" class="std-input big-input" placeholder="0.00" oninput="formatAndRecalculateMain(this)">
                 </div>
                 <div class="input-box">
                     <span class="field-label">No. Punto</span>
@@ -253,11 +300,37 @@
     </div>
 
     <div id="printable-overlay">
-        <div id="loading-msg">Generando PDF... Por favor espere.</div>
+        <div id="loading-msg">Generando PDF con Detalle... Por favor espere.</div>
         <div id="pdf-render-target"></div>
     </div>
 
     <script>
+        // --- SISTEMA DE LOGIN ---
+        const APP_PASS = "97194612"; // Contraseña establecida
+
+        // Event listener para tecla Enter
+        document.getElementById('login-pass').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') checkPassword();
+        });
+
+        function checkPassword() {
+            const input = document.getElementById('login-pass');
+            if (input.value === APP_PASS) {
+                // Correcto
+                document.getElementById('login-overlay').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('login-overlay').style.display = 'none';
+                    document.getElementById('main-app').style.display = 'flex'; // Mostrar app
+                }, 500);
+            } else {
+                // Incorrecto
+                input.classList.add('error');
+                input.value = '';
+                setTimeout(() => input.classList.remove('error'), 300);
+            }
+        }
+
+        // --- APLICACIÓN PRINCIPAL ---
         let currentCurrency = 'GTQ';
         let currentBank = 'BAM';
         let totalCounted = 0;
@@ -272,13 +345,38 @@
         };
         const currencySymbols = { 'GTQ': 'Q', 'USD': '$', 'EUR': '€' };
 
+        // FORMATO VISUAL CON COMAS
         function fmt(num) {
             if(num === undefined || num === null || isNaN(num)) return "0.00";
             return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
+
+        // LIMPIAR COMAS PARA CALCULAR
         function parseInput(str) {
             if (!str) return 0;
-            return parseFloat(str.replace(/,/g, ''));
+            return parseFloat(str.toString().replace(/,/g, ''));
+        }
+
+        // FUNCION PARA FORMATEAR INPUT MIENTRAS SE ESCRIBE
+        function formatAndRecalculate(input) {
+            let rawValue = input.value.replace(/,/g, '');
+            if(rawValue === '') rawValue = '0';
+            if(!isNaN(rawValue)) {
+                const parts = rawValue.split('.');
+                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                input.value = parts.join('.');
+            }
+            recalculateAll();
+        }
+
+        function formatAndRecalculateMain(input) {
+            let rawValue = input.value.replace(/,/g, '');
+            if(!isNaN(rawValue) && rawValue !== '') {
+                const parts = rawValue.split('.');
+                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                input.value = parts.join('.');
+            }
+            updateSummary();
         }
 
         window.onload = function() {
@@ -349,7 +447,9 @@
                  const denoms = denominations[currentCurrency];
                  const symbol = currencySymbols[currentCurrency];
                  denoms.forEach(val => {
-                    const savedVal = currentBreakdown[val] || ''; 
+                    let savedVal = currentBreakdown[val] || ''; 
+                    if(savedVal !== '') savedVal = fmt(savedVal);
+
                     let labelText = `${symbol} ${val}`;
                     if(currentCurrency === 'GTQ') {
                         if(val >= 2) labelText = `Billete ${symbol} ${val}`;
@@ -360,7 +460,7 @@
                     row.innerHTML = `
                         <div class="denom-label">${labelText}</div>
                         <div class="denom-input-group">
-                            <input type="number" class="denom-input" data-denom="${val}" placeholder="0" value="${savedVal}" oninput="recalculateAll()">
+                            <input type="text" inputmode="decimal" class="denom-input" data-denom="${val}" placeholder="0" value="${savedVal}" oninput="formatAndRecalculate(this)">
                         </div>
                         <div class="denom-result"><span class="piece-count">0</span> pzs</div>`;
                     container.appendChild(row);
@@ -376,9 +476,12 @@
             let tempTotalVal = 0; let tempTotalPieces = 0;
             currentBreakdown = {}; 
             inputs.forEach(input => {
-                const val = parseFloat(input.value) || 0;
+                const valStr = input.value;
+                const val = parseInput(valStr); 
                 const denom = parseFloat(input.getAttribute('data-denom'));
+                
                 if(val > 0) currentBreakdown[denom] = val;
+                
                 const piecesSpan = input.parentElement.parentElement.querySelector('.piece-count');
                 if (val > 0) {
                     const p = val / denom;
@@ -415,7 +518,7 @@
             };
 
             savedRecords.push(record);
-            localStorage.setItem('audit_data_v8', JSON.stringify(savedRecords));
+            localStorage.setItem('audit_data_final_secure', JSON.stringify(savedRecords));
             renderSavedList();
             showToast("Guardado", "Registro añadido.");
             clearForm();
@@ -446,7 +549,7 @@
 
         function deleteRecord(index) {
             savedRecords.splice(index, 1);
-            localStorage.setItem('audit_data_v8', JSON.stringify(savedRecords));
+            localStorage.setItem('audit_data_final_secure', JSON.stringify(savedRecords));
             renderSavedList();
         }
 
@@ -454,7 +557,7 @@
             const rec = savedRecords[index];
             document.getElementById('point-id').value = rec.pointId;
             document.getElementById('point-name').value = rec.pointName;
-            document.getElementById('declared-value').value = rec.declared;
+            document.getElementById('declared-value').value = fmt(rec.declared);
             document.getElementById('observations').value = rec.observations || "";
             
             currentCurrency = rec.currency; currentBank = rec.bank;
@@ -487,13 +590,13 @@
         function deleteAllData() {
             if(confirm("¿Eliminar TODOS los datos?")) {
                 savedRecords = [];
-                localStorage.removeItem('audit_data_v8');
+                localStorage.removeItem('audit_data_final_secure');
                 renderSavedList(); clearForm();
             }
         }
 
         function loadFromStorage() {
-            const data = localStorage.getItem('audit_data_v8');
+            const data = localStorage.getItem('audit_data_final_secure');
             if(data) {
                 savedRecords = JSON.parse(data);
                 savedRecords.forEach(r => r.date = new Date(r.date));
@@ -509,16 +612,14 @@
             setTimeout(() => t.style.display = 'none', 3000);
         }
 
-        // --- GENERADOR PDF INFALIBLE (OVERLAY VISIBLE) ---
+        // --- GENERADOR PDF ---
         function generatePDF() {
             if (savedRecords.length === 0) { showToast("Error", "No hay datos para PDF."); return; }
             
-            // 1. MOSTRAR EL OVERLAY (Lo hace visible en pantalla)
             const overlay = document.getElementById('printable-overlay');
             const target = document.getElementById('pdf-render-target');
             overlay.style.display = 'flex';
             
-            // 2. GENERAR HTML
             target.innerHTML = '';
             let htmlContent = '';
             
@@ -537,47 +638,53 @@
                     if(rec.diff > 0.001) { diffLabel = "SOBRANTE"; colorDiff = "color:red;"; }
                     if(rec.diff < -0.001) { diffLabel = "FALTANTE"; colorDiff = "color:red;"; }
 
-                    // INLINE STYLES PARA ASEGURAR VISIBILIDAD
+                    let breakdownRows = '';
+                    const sortedKeys = Object.keys(rec.breakdown).sort((a,b) => parseFloat(b) - parseFloat(a));
+                    
+                    sortedKeys.forEach(k => {
+                        const totalVal = parseFloat(rec.breakdown[k]);
+                        const count = totalVal / parseFloat(k);
+                        if(totalVal > 0) {
+                            breakdownRows += `
+                            <tr>
+                                <td style="font-size:9px; color:#333; padding:1px;">${symbol} ${k}</td>
+                                <td style="font-size:9px; color:#333; text-align:center; padding:1px;">x ${count % 1 === 0 ? count : count.toFixed(2)}</td>
+                                <td style="font-size:9px; color:#000; text-align:right; font-family:monospace; padding:1px;">${fmt(totalVal)}</td>
+                            </tr>`;
+                        }
+                    });
+
                     pageHtml += `
                     <div style="width:48%; height:460px; border:2px solid #000; border-radius:5px; padding:15px; display:flex; flex-direction:column; justify-content:space-between; background:#fff; color:#000;">
                         
-                        <div style="border-bottom:2px solid #000; padding-bottom:8px; margin-bottom:10px;">
+                        <div style="border-bottom:2px solid #000; padding-bottom:5px; margin-bottom:5px;">
                             <div style="font-size:16px; font-weight:bold; color:#000;">PUNTO #${rec.pointId}</div>
                             <div style="font-size:14px; font-weight:bold; color:#000;">${rec.pointName}</div>
                             <div style="font-size:12px; color:#000;">Banco: ${rec.bank}</div>
                         </div>
                         
-                        <table style="width:100%; border-collapse:collapse; flex-grow:1; margin-top:5px;">
-                            <tr><td style="border-bottom:1px solid #ccc; padding:5px 0; font-size:11px; color:#000;">Valor Declarado:</td>
-                                <td style="border-bottom:1px solid #ccc; padding:5px 0; font-size:11px; color:#000; text-align:right; font-weight:bold; font-family:monospace;">${symbol} ${fmt(rec.declared)}</td></tr>
-                            
-                            <tr><td style="border-bottom:1px solid #ccc; padding:5px 0; font-size:11px; color:#000;">Valor Arqueado:</td>
-                                <td style="border-bottom:1px solid #ccc; padding:5px 0; font-size:11px; color:#000; text-align:right; font-weight:bold; font-family:monospace;">${symbol} ${fmt(rec.counted)}</td></tr>
-                            
-                            <tr><td style="border-bottom:1px solid #ccc; padding:5px 0; font-size:11px; color:#000;">Piezas Físicas:</td>
-                                <td style="border-bottom:1px solid #ccc; padding:5px 0; font-size:11px; color:#000; text-align:right; font-weight:bold; font-family:monospace;">${rec.pieces.toFixed(0)}</td></tr>
-                            
-                            <tr style="border-top:1px solid #000;">
-                                <td style="padding:5px 0; font-size:11px; color:#000;">Diferencia (${diffLabel}):</td>
-                                <td style="padding:5px 0; font-size:11px; ${colorDiff} text-align:right; font-weight:bold; font-family:monospace;">
-                                    ${symbol} ${fmt(rec.diff)}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td colspan="2" style="padding-top:10px; font-style:italic; border-bottom:none; font-size:10px; color:#333;">
-                                    Obs: ${obs}
-                                </td>
-                            </tr>
-                        </table>
-                        
-                        <div style="margin-top:15px; margin-bottom:5px; display:flex; justify-content:space-between;">
-                            <div style="width:45%; border-top:1px solid #000; text-align:center; font-size:9px; padding-top:2px; font-weight:bold; color:#000;">Firma Encargado</div>
-                            <div style="width:45%; border-top:1px solid #000; text-align:center; font-size:9px; padding-top:2px; font-weight:bold; color:#000;">Firma Auditor</div>
-                        </div>
+                        <div style="flex-grow:1;">
+                            <table style="width:100%; border-collapse:collapse;">
+                                <tr><td style="padding:2px 0; font-size:11px; color:#000;">Declarado:</td>
+                                    <td style="padding:2px 0; font-size:11px; color:#000; text-align:right; font-weight:bold;">${symbol} ${fmt(rec.declared)}</td></tr>
+                                <tr><td style="padding:2px 0; font-size:11px; color:#000;">Arqueado:</td>
+                                    <td style="padding:2px 0; font-size:11px; color:#000; text-align:right; font-weight:bold;">${symbol} ${fmt(rec.counted)}</td></tr>
+                                <tr><td style="padding:2px 0; font-size:11px; color:#000;">Diferencia:</td>
+                                    <td style="padding:2px 0; font-size:11px; ${colorDiff} text-align:right; font-weight:bold;">${symbol} ${fmt(rec.diff)}</td></tr>
+                            </table>
 
-                        <div style="margin-top:5px; border-top:1px solid #000; padding-top:5px; text-align:center; font-size:8px; color:#000;">
-                            <div style="font-weight:bold;">QUETZALTENANGO</div>
-                            <div>${dateStr} - ${timeStr} | M.V.C.G.</div>
+                            <div style="margin-top:5px; border-top:1px dashed #aaa; padding-top:2px;">
+                                <div style="font-size:10px; font-weight:bold; color:#000;">Detalle:</div>
+                                <table style="width:100%; border-collapse:collapse;">${breakdownRows}</table>
+                            </div>
+                            
+                            <div style="margin-top:5px; font-size:10px; color:#333; font-style:italic;">Obs: ${obs}</div>
+                        </div>
+                        
+                        <div style="margin-top:20px; border-top:1px solid #000; padding-top:5px; text-align:center; color:#000;">
+                            <div style="font-size:10px; font-weight:bold;">QUETZALTENANGO, QUETZALTENANGO</div>
+                            <div style="font-size:9px;">${dateStr} - ${timeStr}</div>
+                            <div style="font-size:8px; margin-top:2px;">M.V.C.G.</div>
                         </div>
                     </div>`;
                 });
@@ -587,8 +694,6 @@
             }
             target.innerHTML = htmlContent;
 
-            // 3. CAPTURA Y DESCARGA
-            // Esperamos 500ms para asegurar que el usuario ve el overlay y el DOM se pinta
             setTimeout(() => {
                 const opt = { 
                     margin: 0.2, 
@@ -599,7 +704,6 @@
                 };
                 
                 html2pdf().set(opt).from(target).save().then(() => {
-                     // OCULTAR OVERLAY AL TERMINAR
                      overlay.style.display = 'none';
                      showToast("Éxito", "PDF Descargado");
                 });
